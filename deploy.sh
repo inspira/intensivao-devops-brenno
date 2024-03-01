@@ -44,6 +44,8 @@ echo -e "===============================================================\n"
 
 pip install -r requirements.txt
 
+sudo cp -f .env.prd .env
+
 cd ..
 
 ### NGINX SETUP ###
