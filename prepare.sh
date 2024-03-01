@@ -10,15 +10,15 @@ export NVM_DIR="$HOME/.nvm"
 [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
 
 nvm install
+npm install --global yarn
 yarn install
-
-yarn start &
 
 ### BACKEND SETUP ###
 
 cd ../backend || exit
 
+pip install pipenv
 pipenv shell
 pipenv install
 
-uvicorn main:app --reload &
+cd ..
