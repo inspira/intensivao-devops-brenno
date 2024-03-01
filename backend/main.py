@@ -21,7 +21,7 @@ app.add_middleware(
 )
 
 
-@app.get("/health")
+@app.get("/api/health")
 async def health():
     return {"message": "Server is active."}
 
@@ -31,7 +31,7 @@ class Numbers(BaseModel):
     num2: float
 
 
-@app.post("/sum")
+@app.post("/api/sum")
 def sum(numbers: Numbers):
     print(numbers)
     try:
