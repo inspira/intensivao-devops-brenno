@@ -33,7 +33,6 @@ class Numbers(BaseModel):
 
 @app.post("/api/sum")
 def sum(numbers: Numbers):
-    print(numbers)
     try:
         result = numbers.num1 + numbers.num2
         return {"result": result}
