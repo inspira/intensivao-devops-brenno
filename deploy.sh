@@ -71,8 +71,21 @@ sudo nginx -t
 
 if [ $? -eq 0 ]; then
     sudo systemctl reload nginx
+
+    if [ $? -eq 0 ]; then
+        sudo systemctl start nginx
+    fi
+    
     echo "Server is on."
 else
     echo "An error occurred while turning the server on."
     exit 1
 fi
+
+cd backend
+
+echo -e "\n==============================================================="
+echo -e "Starting server"
+echo -e "===============================================================\n"
+
+uvicorn main:app --reload
