@@ -17,10 +17,7 @@ yarn install
 
 cd ../backend || exit
 
-sudo apt update
-sudo apt install python3-pip
-
-pip install pipenv
+sudo apt install pipenv
 pipenv shell
 pipenv install
 
