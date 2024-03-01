@@ -2,7 +2,9 @@
 
 ### TURN ON FRONTEND ###
 
-echo -e "echo Turning Frontend On\n\n"
+echo -e "==============================================================="
+echo Turning Frontend On
+echo -e "===============================================================\n"
 
 cd frontend || exit
 yarn start &
@@ -14,16 +16,14 @@ else
     exit 1
 fi
 
-echo -e "-------------------------------------------------------------------\n\n"
-
 ### TURN ON BACKEND ###
 
-
-echo Turning Backend On \n\n
+echo -e "==============================================================="
+echo Turning Backend On
+echo -e "===============================================================zn"
 
 cd ../backend || exit
-pipenv shell
-pipenv install
+source sum-numbers/bin/activate
 uvicorn main:app --reload &
 
 if [ $? -eq 0 ]; then
