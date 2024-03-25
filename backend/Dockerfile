@@ -23,10 +23,10 @@ RUN apt-get update && \
         /usr/share/doc-base
 
 # Set env
-COPY ./backend/.env.prd .env
+COPY ./.env.prd .env
 
 # Install application dependencies
-COPY ./backend/Pipfile ./
+COPY ./Pipfile ./
 RUN pipenv install
 
 # Copy application
