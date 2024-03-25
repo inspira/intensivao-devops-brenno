@@ -29,7 +29,7 @@ jobs:
         run: yarn --cwd frontend install
 
       - name: Build frontend
-        run: yarn --cwd frontend build
+        run: yarn --cwd frontend build:deploy
 
       - name: Archive production build
         uses: actions/upload-artifact@v2
