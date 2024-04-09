@@ -1,5 +1,7 @@
 FROM python:3.8-slim AS build
 
+ARG ENVIRONMENT=prd
+
 WORKDIR /app/backend
 
 # Required for pipenv to build properly
@@ -22,8 +24,8 @@ RUN apt-get update && \
         /usr/share/doc \
         /usr/share/doc-base
 
-# Set env
-COPY ./.env.prd .env
+# Set env based on build argument
+COPY ./.env.${ENVIRONMENT} .env
 
 # Install application dependencies
 COPY ./Pipfile ./
