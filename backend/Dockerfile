@@ -24,15 +24,14 @@ RUN apt-get update && \
         /usr/share/doc \
         /usr/share/doc-base
 
-# Set env based on build argument
-COPY ./.env.${ENVIRONMENT} .env
-
-# Install application dependencies
-COPY ./Pipfile ./
-RUN pipenv install
-
 # Copy application
 COPY . ./
+
+# Install application dependencies
+RUN pipenv install
+
+# Set env based on build argument
+COPY backend/.env.${ENVIRONMENT} .env
 
 # Open port 2222 for SSH access
 EXPOSE 8000

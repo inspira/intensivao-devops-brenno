@@ -1,6 +1,7 @@
+name: pr-pipeline
+
 on: pull_request
 
-name: pr-pipeline
 jobs:
   semgrep:
     name: semgrep
@@ -18,14 +19,12 @@ jobs:
     container:
       image: docker:latest
       options: --privileged
-    services:
-      - name: docker:dind
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
 
       - name: Build and run containers
-        run: docker-compose up --build -d --env ENVIRONMENT=sample
+        run: docker-compose up --build -d
 
       - name: Run frontend tests
         run: docker-compose exec frontend yarn test --passWithNoTests
