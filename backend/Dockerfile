@@ -15,6 +15,7 @@ RUN apt-get update && \
     && echo "root:Docker!" | chpasswd \
     && apt-get purge --auto-remove -yqq \
     && apt-get autoremove -yqq --purge \
+    && apt-get install -y npm \
     && apt-get clean \
     && rm -rf \
         /var/lib/apt/lists/* \
@@ -24,16 +25,21 @@ RUN apt-get update && \
         /usr/share/doc \
         /usr/share/doc-base
 
-# Copy application
-COPY . ./
-
-# Install application dependencies
-RUN pipenv install
-
-# Set env based on build argument
+# Set env
 COPY backend/.env.${ENVIRONMENT} .env
 
-# Open port 2222 for SSH access
+# Install application dependencies
+COPY backend/Pipfile ./
+RUN pipenv install
+RUN npm install -g newman
+
+# Copy application
+COPY ./ /app/backend
+
+# Set env based on build argument
+COPY backend/.env.${ENVIRONMENT} /app/.env
+
+# Open port 8000 for SSH access
 EXPOSE 8000
 
 # Run app

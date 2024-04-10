@@ -13,27 +13,35 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - run: semgrep ci
-
   backend-frontend:
+    name: backend-frontend-checks
     runs-on: ubuntu-20.04
-    container:
-      image: docker:latest
-      options: --privileged
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
 
-      - name: Build and run containers
-        run: docker-compose up --build -d
+      - name: Set up Node.js
+        uses: actions/setup-node@v2
+        with:
+          node-version: '18'
 
-      - name: Run frontend tests
-        run: docker-compose exec frontend yarn test --passWithNoTests
+      - name: Install Yarn
+        run: npm install -g yarn
+
+      - name: Install Newman
+        run: npm install -g newman
+
+      - name: Build and run containers
+        working-directory: ./backend
+        run: |
+          docker-compose -f ../docker-compose-ci.yml up --build -d
+          sleep 5
+          newman run postman/Intensivao-Devops.postman_collection.json
 
       - name: Run frontend linter
-        run: docker-compose exec frontend yarn prettier
+        working-directory: ./frontend
+        run: yarn prettier
 
-      - name: Run backend tests
-        run: docker-compose exec backend newman run postman/Intensivao-Devops.postman_collection.json
-
-      - name: Stop containers
-        run: docker-compose down
+      - name: Run frontend tests
+        working-directory: ./frontend
+        run: yarn test --passWithNoTests
