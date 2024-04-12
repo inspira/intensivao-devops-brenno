@@ -36,9 +36,6 @@ RUN npm install -g newman
 # Copy application
 COPY ./ /app/backend
 
-# Set env based on build argument
-COPY backend/.env.${ENVIRONMENT} /app/.env
-
 # Open port 8000 for SSH access
 EXPOSE 8000
 
