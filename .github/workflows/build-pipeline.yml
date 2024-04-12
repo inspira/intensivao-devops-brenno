@@ -43,9 +43,14 @@ jobs:
       - name: Create tar file
         run: tar -czvf frontend-build.tar.gz frontend/build
 
-
-      - name: Upload artifact to GitHub Packages
+      - name: Publish frontend artifact to GitHub Packages
         uses: actions/upload-artifact@v4
         with:
           name: frontend-artifact
           path: frontend-build.tar.gz
+      
+      - name: Publish frontend artifact to GitHub Packages
+        run: |
+          echo "//npm.pkg.github.com/:_authToken=${{ secrets.GITHUB_TOKEN }}" > ~/.npmrc
+          npm publish frontend-build.tar.gz --access public --registry=https://npm.pkg.github.com/
+
