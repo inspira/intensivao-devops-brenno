@@ -13,8 +13,8 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - run: semgrep ci
-  backend-frontend:
-    name: backend-frontend-checks
+  backend:
+    name: backend
     runs-on: ubuntu-20.04
     steps:
       - name: Checkout code
@@ -37,6 +37,24 @@ jobs:
           docker-compose -f ../docker-compose-ci.yml up --build -d
           sleep 5
           newman run postman/Intensivao-Devops.postman_collection.json
+  frontend:
+    name: frontend
+    runs-on: ubuntu-20.04
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v2
+        with:
+          node-version: '20.8.1'
+
+      - name: Install Yarn
+        run: npm install -g yarn
+
+      - name: Install dependencies
+        working-directory: ./frontend
+        run: yarn install
 
       - name: Run frontend linter
         working-directory: ./frontend
