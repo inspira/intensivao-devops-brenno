@@ -1,4 +1,4 @@
-name: Azure Deployment
+name: Build Artifacts
 
 on:
   push:
@@ -12,13 +12,38 @@ jobs:
     steps:
     - name: Checkout code
       uses: actions/checkout@v2
+
+    - name: Set up Node.js
+      uses: actions/setup-node@v2
+      with:
+        node-version: '18'
+
+    - name: Install Yarn
+      run: npm install -g yarn
+
+    - name: Install Newman
+      run: npm install -g newman
+
+    - name: Run backend tests
+      working-directory: ./backend
+      run: |
+        docker-compose -f ../docker-compose-ci.yml up --build -d
+        sleep 5
+        newman run postman/Intensivao-Devops.postman_collection.json
       
+    - name: Generate Backend Semantic Version
+      id: backend_version
+      run: echo "::set-output name=version::1.0.${{ github.run_number }}"
+
     - name: Build and Push Docker Image
       run: |
-        docker build -t brenno/app:latest -f ./backend/Dockerfile .
-        docker tag brenno/app ${{ secrets.ACR_SERVER }}/${{ secrets.IMAGE_NAME }}
+        version=$(echo "${{ steps.backend_version.outputs.version }}")
+        docker build -t brenno/app:${version} -t brenno/app:latest -f ./backend/Dockerfile .
+        docker tag brenno/app ${{ secrets.ACR_SERVER }}/${{ secrets.IMAGE_NAME }}:${version}
+        docker tag brenno/app ${{ secrets.ACR_SERVER }}/${{ secrets.IMAGE_NAME }}:latest
         docker login ${{ secrets.ACR_SERVER }} -u ${{ secrets.ACR_USERNAME }} -p ${{ secrets.ACR_PASSWORD }}
-        docker push ${{ secrets.ACR_SERVER }}/${{ secrets.IMAGE_NAME }}
+        docker push ${{ secrets.ACR_SERVER }}/${{ secrets.IMAGE_NAME }}:${version}
+        docker push ${{ secrets.ACR_SERVER }}/${{ secrets.IMAGE_NAME }}:latest
 
   build-frontend:
     if: github.event_name == 'push' || (github.event_name == 'pull_request' && github.event.action != 'closed')
@@ -37,8 +62,18 @@ jobs:
       - name: Install frontend dependencies
         run: yarn --cwd frontend install
 
+      - name: Run frontend tests
+        working-directory: ./frontend
+        run: yarn test --passWithNoTests
+
+      - name: Generate Frontend Semantic Version
+        id: frontend_version
+        run: echo "::set-output name=version::1.0.${{ github.run_number }}"
+
       - name: Build frontend
-        run: yarn --cwd frontend build:deploy
+        run: |
+          version=$(echo "${{ steps.frontend_version.outputs.version }}")
+          yarn --cwd frontend build:deploy --version=${version}
 
       - name: Upload artifact to GitHub Packages
         uses: actions/upload-artifact@v4
