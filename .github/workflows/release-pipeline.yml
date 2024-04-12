@@ -1,4 +1,4 @@
-name: Build and deploy container app to Azure Web App - sum-calculator-web-app
+name: Deploy Backend and Frontend
 
 on:
   workflow_run:
@@ -17,7 +17,7 @@ jobs:
     - name: Get run_number
       uses: actions/download-artifact@v2
       with:
-        name: run_number
+        name: run_number.txt
         path: .
           
     - name: Generate Backend Semantic Version
@@ -40,7 +40,7 @@ jobs:
       - name: Get run_number
         uses: actions/download-artifact@v2
         with:
-          name: run_number
+          name: run_number.txt
           path: .
         
       - name: Generate Frontend Semantic Version
