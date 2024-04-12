@@ -45,7 +45,7 @@ jobs:
 
 
       - name: Publish frontend artifact to GitHub Packages
-        uses: actions/upload-artifact@v4
-        with:
-          path: |
-            frontend-build.tar.gz
+        run: |
+          npm publish frontend-build.tar.gz --registry=https://npm.pkg.github.com/
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
