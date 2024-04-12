@@ -45,6 +45,17 @@ jobs:
         docker push ${{ secrets.ACR_SERVER }}/${{ secrets.IMAGE_NAME }}:${version}
         docker push ${{ secrets.ACR_SERVER }}/${{ secrets.IMAGE_NAME }}:latest
 
+    - name: Save run number to file
+      run: echo "${{ github.run_number }}" > run_number.txt
+
+    - name: Archive run number
+      if: always()
+      uses: actions/upload-artifact@v2
+      with:
+        name: run_number
+        path: run_number.txt
+        if-no-files-found: error
+
   build-frontend:
     if: github.event_name == 'push' || (github.event_name == 'pull_request' && github.event.action != 'closed')
     runs-on: ubuntu-latest
