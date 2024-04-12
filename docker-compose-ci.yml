@@ -1,0 +1,14 @@
+services:
+  backend:
+    build:
+      dockerfile: ./backend/Dockerfile
+      context: ./
+      args:
+        - ENVIRONMENT=local
+    ports:
+      - "8000:8000"
+    environment:
+      - LC_ALL=C.UTF-8
+      - LANG=C.UTF-8
+    volumes:
+      - ./backend:/app/backend

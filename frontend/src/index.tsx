@@ -4,9 +4,12 @@ import { useState } from "react";
 import "./styles.scss";
 import { post } from "./services/axios";
 
-const root = ReactDOM.createRoot(document.getElementById("root")!);
+document.addEventListener("DOMContentLoaded", function () {
+  const root = ReactDOM.createRoot(document.getElementById("root") as Element);
+  root.render(<App />);
+});
 
-function App() {
+export function App() {
   const [num1, setNum1] = useState<number | string>("");
   const [num2, setNum2] = useState<number | string>("");
   const [total, setTotal] = useState<number | undefined>(0);
@@ -40,5 +43,3 @@ function App() {
     </div>
   );
 }
-
-root.render(<App />);

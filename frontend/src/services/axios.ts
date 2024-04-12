@@ -29,7 +29,7 @@ api.interceptors.request.use(
     };
     return newConfig;
   },
-  (error: any) => Promise.reject(error)
+  (error: any) => Promise.reject(error),
 );
 
 const get = async (url: string, config?: any) => {

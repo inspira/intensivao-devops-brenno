@@ -1,5 +1,7 @@
 FROM python:3.8-slim AS build
 
+ARG ENVIRONMENT=prd
+
 WORKDIR /app/backend
 
 # Required for pipenv to build properly
@@ -13,6 +15,7 @@ RUN apt-get update && \
     && echo "root:Docker!" | chpasswd \
     && apt-get purge --auto-remove -yqq \
     && apt-get autoremove -yqq --purge \
+    && apt-get install -y npm \
     && apt-get clean \
     && rm -rf \
         /var/lib/apt/lists/* \
@@ -23,16 +26,20 @@ RUN apt-get update && \
         /usr/share/doc-base
 
 # Set env
-COPY ./.env.prd .env
+COPY backend/.env.${ENVIRONMENT} .env
 
 # Install application dependencies
-COPY ./Pipfile ./
+COPY backend/Pipfile ./
 RUN pipenv install
+RUN npm install -g newman
 
 # Copy application
-COPY . ./
+COPY ./ /app/backend
 
-# Open port 2222 for SSH access
+# Set env based on build argument
+COPY backend/.env.${ENVIRONMENT} /app/.env
+
+# Open port 8000 for SSH access
 EXPOSE 8000
 
 # Run app

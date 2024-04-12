@@ -1,10 +1,10 @@
-version: '3.8'
-
 services:
   backend:
     build:
       dockerfile: ./backend/Dockerfile
       context: ./
+      args:
+        - ENVIRONMENT=local
     ports:
       - "8000:8000"
       - "2222:2222"
@@ -14,8 +14,7 @@ services:
     volumes:
       - ./backend:/app/backend
     networks:
-      - sum-calculator
-
+      - sum-calculator  
   frontend:
     build:
       dockerfile: ./frontend/Dockerfile
