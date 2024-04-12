@@ -15,7 +15,7 @@ jobs:
       
     - name: Build and Push Docker Image
       run: |
-        docker build -t brenno/app:latest ./backend
+        docker build -t brenno/app:latest .
         docker tag brenno/app ${{ secrets.ACR_SERVER }}/${{ secrets.IMAGE_NAME }}
         docker login ${{ secrets.ACR_SERVER }} -u ${{ secrets.ACR_USERNAME }} -p ${{ secrets.ACR_PASSWORD }}
         docker push ${{ secrets.ACR_SERVER }}/${{ secrets.IMAGE_NAME }}
@@ -23,7 +23,6 @@ jobs:
   build-frontend:
     if: github.event_name == 'push' || (github.event_name == 'pull_request' && github.event.action != 'closed')
     runs-on: ubuntu-latest
-    name: Build and Deploy Job
     steps:
       - uses: actions/checkout@v3
         with:
@@ -48,9 +47,7 @@ jobs:
           path: frontend/build
 
       - name: Publish frontend artifact to GitHub Packages
-        run: |
-          echo "//npm.pkg.github.com/:_authToken=${{secrets.GITHUB_TOKEN}}" >> ~/.npmrc
-          echo "@brenno-andrade-novais:registry=https://npm.pkg.github.com" >> ~/.npmrc
-          npm publish --registry=https://npm.pkg.github.com
-        env:
-          NODE_AUTH_TOKEN: ${{secrets.GITHUB_TOKEN}}
+        uses: actions/upload-artifact@v4
+        with:
+          path: |
+            frontend/build

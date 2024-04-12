@@ -4,10 +4,9 @@ services:
       dockerfile: ./backend/Dockerfile
       context: ./
       args:
-        - ENVIRONMENT=local
+        - ENVIRONMENT=prd
     ports:
       - "8000:8000"
-      - "2222:2222"
     environment:
       - LC_ALL=C.UTF-8
       - LANG=C.UTF-8
