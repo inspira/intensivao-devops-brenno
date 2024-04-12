@@ -40,14 +40,12 @@ jobs:
       - name: Build frontend
         run: yarn --cwd frontend build:deploy
 
-      - name: Archive production build
-        uses: actions/upload-artifact@v2
-        with:
-          name: frontend-build
-          path: frontend/build
+      - name: Create tar file
+        run: tar -czvf frontend-build.tar.gz frontend/build
+
 
       - name: Publish frontend artifact to GitHub Packages
         uses: actions/upload-artifact@v4
         with:
           path: |
-            frontend/build
+            frontend-build.tar.gz
