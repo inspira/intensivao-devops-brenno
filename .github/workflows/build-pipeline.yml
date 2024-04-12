@@ -15,7 +15,7 @@ jobs:
       
     - name: Build and Push Docker Image
       run: |
-        docker build -t brenno/app:latest .
+        docker build -t brenno/app:latest -f ./backend/Dockerfile .
         docker tag brenno/app ${{ secrets.ACR_SERVER }}/${{ secrets.IMAGE_NAME }}
         docker login ${{ secrets.ACR_SERVER }} -u ${{ secrets.ACR_USERNAME }} -p ${{ secrets.ACR_PASSWORD }}
         docker push ${{ secrets.ACR_SERVER }}/${{ secrets.IMAGE_NAME }}
