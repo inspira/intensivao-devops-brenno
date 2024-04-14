@@ -7,26 +7,43 @@ on:
       - completed
 
 jobs:
+  get_artifacts:
+    steps:
+    - name: Get run_number
+      uses: actions/download-artifact@v4
+      with:
+        github-token: ${{ secrets.GITHUB_TOKEN }}
+        run-id: context.payload.workflow_run.id
+        name: run_number
+        path: .
+
+    - name: Unzip run_number
+      run: unzip run_number.zip -d .
+
+    - name: Download frontend artifact
+      uses: actions/download-artifact@v4
+      with:
+        name: frontend-build-${{ steps.frontend_version.outputs.version }}
+        path: .
+        version: ${{ steps.frontend_version.outputs.version }}
+
+    - name: Unzip Build Folder Artifact
+      run: unzip frontend-build-${{ steps.frontend_version.outputs.version }}.zip -d .
+    
   deploy-backend:
+    needs: get_artifacts
     runs-on: ubuntu-latest
     if: ${{ github.event.workflow_run.conclusion == 'success' }}
     environment:
       name: 'production'
       url: ${{ steps.deploy-to-webapp.outputs.webapp-url }}
 
-    steps:
-    - name: Get run_number
-      uses: actions/download-artifact@v2
-      with:
-        name: run_number
-        path: .
-          
+    steps:    
     - name: Generate Backend Semantic Version
       id: backend_version
       run: echo "::set-output name=version::1.0.$(cat run_number.txt)"
         
     - name: Deploy to Azure Web App
-      
       id: deploy-to-webapp
       uses: azure/webapps-deploy@v2
       with:
@@ -36,31 +53,13 @@ jobs:
         images: 'inspiradevops.azurecr.io/${{ secrets.AzureAppService_ContainerUsername_792aa0849f8d49e0a3ae051198c4fdc4 }}/brenno-app:${{ steps.backend_version.outputs.version }}"'
   
   deploy-frontend:
+    needs: get_artifacts
     runs-on: ubuntu-latest
     if: ${{ github.event.workflow_run.conclusion == 'success' }}
-    steps:
-      - name: Get run_number
-        uses: actions/download-artifact@v2
-        with:
-          name: run_number
-          path: .
-
-      - name: Unzip run_number
-        run: unzip run_number.zip -d .
-        
+    steps:     
       - name: Generate Frontend Semantic Version
         id: frontend_version
         run: echo "::set-output name=version::1.0.$(cat run_number.txt)"
-
-      - name: Download frontend artifact
-        uses: actions/download-artifact@v2
-        with:
-          name: frontend-build-${{ steps.frontend_version.outputs.version }}
-          path: .
-          version: ${{ steps.frontend_version.outputs.version }}
-
-      - name: Unzip Build Folder Artifact
-        run: unzip frontend-build-${{ steps.frontend_version.outputs.version }}.zip -d .
 
       - name: Build And Deploy
         id: builddeploy
