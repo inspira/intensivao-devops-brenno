@@ -11,6 +11,16 @@ jobs:
     runs-on: ubuntu-latest
     if: ${{ github.event.workflow_run.conclusion == 'success' }}
     steps:
+    - name: Download frontend artifact
+      uses: actions/download-artifact@v4
+      with:
+        name: frontend-build-${{ steps.frontend_version.outputs.version }}
+        path: .
+        version: ${{ steps.frontend_version.outputs.version }}
+
+    - name: Unzip Build Folder Artifact
+      run: unzip frontend-build-${{ steps.frontend_version.outputs.version }}.zip -d .
+
     - name: Get run_number
       uses: actions/download-artifact@v4
       with:
@@ -21,16 +31,6 @@ jobs:
 
     - name: Unzip run_number
       run: unzip run_number.zip -d .
-
-    - name: Download frontend artifact
-      uses: actions/download-artifact@v4
-      with:
-        name: frontend-build-${{ steps.frontend_version.outputs.version }}
-        path: .
-        version: ${{ steps.frontend_version.outputs.version }}
-
-    - name: Unzip Build Folder Artifact
-      run: unzip frontend-build-${{ steps.frontend_version.outputs.version }}.zip -d .
     
   deploy-backend:
     needs: get_artifacts
