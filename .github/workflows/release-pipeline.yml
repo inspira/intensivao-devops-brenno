@@ -52,7 +52,8 @@ jobs:
                   console.error('Error reading file:', err);
                   return;
               }
-              let version = data.trim();
+              let run_number = data.trim();
+              let version = `1.0.${run_number}`
               let frontend_build = allArtifacts.data.artifacts.find((artifact) => {
                 return artifact.name == `frontend-build-${version}`;
               });
