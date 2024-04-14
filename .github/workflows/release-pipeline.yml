@@ -108,8 +108,8 @@ jobs:
     - name: Download run_number.txt artifact
       uses: actions/download-artifact@v4
       with:
-        name: build-artifacts
-        path: run_number.txt
+        name: run_number
+        path: .
       
     - name: Generate Backend Semantic Version
       id: backend_version
@@ -133,13 +133,13 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: run_number
-          path: run_number.txt
+          path: .
       
       - name: Download frontend-build artifact
         uses: actions/download-artifact@v4
         with:
           name: frontend-build
-          path: frontend-build
+          path: .
           
       - name: Generate Frontend Semantic Version
         id: frontend_version
