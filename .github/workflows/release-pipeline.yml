@@ -76,6 +76,10 @@ jobs:
                   console.error('Frontend build not found for version:', version);
               }
           });
+
+    - name: Generate Frontend Semantic Version
+      id: frontend_version
+      run: echo "::set-output name=version::1.0.$(cat run_number.txt)"
       
     - name: Unzip Build Folder Artifact
       run: unzip frontend-build-${{ steps.frontend_version.outputs.version }}.zip -d .
