@@ -122,7 +122,8 @@ jobs:
         app-name: 'sum-calculator-web-app'
         slot-name: 'production'
         publish-profile: ${{ secrets.AzureAppService_PublishProfile_008d67032fca4db98179f44c50b0bead }}
-        images: 'DOCKER|${{ steps.backend_version.outputs.version }}'
+        images: 'DOCKER|inspiradevops.azurecr.io/${{ secrets.AzureAppService_ContainerUsername_792aa0849f8d49e0a3ae051198c4fdc4 }}/brenno-app:${{ steps.backend_version.outputs.version }}'
+        linux-fx-version: 'DOCKER|latest'
   
   deploy-frontend:
     needs: get_artifacts
