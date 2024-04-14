@@ -84,13 +84,17 @@ jobs:
     - name: Unzip Build Folder Artifact
       run: unzip frontend-build-${{ steps.frontend_version.outputs.version }}.zip -d ./frontend-build
 
-    - name: Upload files as artifacts
+    - name: Upload files run_number as artifact
       uses: actions/upload-artifact@v4
       with:
-        name: build-artifacts
-        path: |
-          run_number.txt
-          frontend-build
+        name: run_number
+        path: run_number.txt
+
+    - name: Upload files frontend-build as artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: frontend-build
+        path: frontend-build
     
   deploy-backend:
     needs: get_artifacts
@@ -128,18 +132,24 @@ jobs:
       - name: Download run_number.txt artifact
         uses: actions/download-artifact@v4
         with:
-          name: build-artifacts
+          name: run_number
           path: run_number.txt
       
       - name: Download frontend-build artifact
         uses: actions/download-artifact@v4
         with:
-          name: build-artifacts
+          name: frontend-build
           path: frontend-build
           
       - name: Generate Frontend Semantic Version
         id: frontend_version
         run: echo "::set-output name=version::1.0.$(cat run_number.txt)"
+
+      - name: test
+        run: dir
+
+      - name: test2
+        run: cat run_number.txt
 
       - name: Build And Deploy
         id: builddeploy
