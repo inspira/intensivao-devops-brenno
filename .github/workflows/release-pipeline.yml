@@ -36,45 +36,45 @@ jobs:
       run: unzip run_number.zip -d .
 
     - name: 'Download frontend artifact'
-  uses: actions/github-script@v6
-  with:
-    script: |
-      let allArtifacts = await github.rest.actions.listWorkflowRunArtifacts({
-         owner: context.repo.owner,
-         repo: context.repo.repo,
-         run_id: context.payload.workflow_run.id,
-      });
-
-      let fs = require('fs');
-
-      fs.readFile('run_number.txt', 'utf8', (err, data) => {
-          if (err) { 
-              console.error('Error reading file:', err);
-              return;
-          }
-          let version = data.trim();
-          let frontend_build = allArtifacts.data.artifacts.find((artifact) => {
-            return artifact.name == `frontend-build-${version}`;
+      uses: actions/github-script@v6
+      with:
+        script: |
+          let allArtifacts = await github.rest.actions.listWorkflowRunArtifacts({
+             owner: context.repo.owner,
+             repo: context.repo.repo,
+             run_id: context.payload.workflow_run.id,
           });
-
-          console.log('Version:', version);
-          console.log('Frontend build:', frontend_build);
-
-          if (frontend_build) {
-              github.rest.actions.downloadArtifact({
-                 owner: context.repo.owner,
-                 repo: context.repo.repo,
-                 artifact_id: frontend_build.id,
-                 archive_format: 'zip',
-              }).then(download => {
-                  fs.writeFileSync(`${process.env.GITHUB_WORKSPACE}/frontend-build-${version}.zip`, Buffer.from(download.data));
-              }).catch(error => {
-                  console.error('Error downloading artifact:', error);
+    
+          let fs = require('fs');
+    
+          fs.readFile('run_number.txt', 'utf8', (err, data) => {
+              if (err) { 
+                  console.error('Error reading file:', err);
+                  return;
+              }
+              let version = data.trim();
+              let frontend_build = allArtifacts.data.artifacts.find((artifact) => {
+                return artifact.name == `frontend-build-${version}`;
               });
-          } else {
-              console.error('Frontend build not found for version:', version);
-          }
-      });
+    
+              console.log('Version:', version);
+              console.log('Frontend build:', frontend_build);
+    
+              if (frontend_build) {
+                  github.rest.actions.downloadArtifact({
+                     owner: context.repo.owner,
+                     repo: context.repo.repo,
+                     artifact_id: frontend_build.id,
+                     archive_format: 'zip',
+                  }).then(download => {
+                      fs.writeFileSync(`${process.env.GITHUB_WORKSPACE}/frontend-build-${version}.zip`, Buffer.from(download.data));
+                  }).catch(error => {
+                      console.error('Error downloading artifact:', error);
+                  });
+              } else {
+                  console.error('Frontend build not found for version:', version);
+              }
+          });
       
     - name: Unzip Build Folder Artifact
       run: unzip frontend-build-${{ steps.frontend_version.outputs.version }}.zip -d .
