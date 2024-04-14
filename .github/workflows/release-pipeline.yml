@@ -11,26 +11,73 @@ jobs:
     runs-on: ubuntu-latest
     if: ${{ github.event.workflow_run.conclusion == 'success' }}
     steps:
-    - name: Download frontend artifact
-      uses: actions/download-artifact@v4
+    - name: 'Download version artifact'
+      uses: actions/github-script@v6
       with:
-        name: frontend-build-${{ steps.frontend_version.outputs.version }}
-        path: .
-        version: ${{ steps.frontend_version.outputs.version }}
-
-    - name: Unzip Build Folder Artifact
-      run: unzip frontend-build-${{ steps.frontend_version.outputs.version }}.zip -d .
-
-    - name: Get run_number
-      uses: actions/download-artifact@v4
-      with:
-        github-token: ${{ secrets.GITHUB_TOKEN }}
-        run-id: context.payload.workflow_run.id
-        name: run_number
-        path: .
+        script: |
+          let allArtifacts = await github.rest.actions.listWorkflowRunArtifacts({
+             owner: context.repo.owner,
+             repo: context.repo.repo,
+             run_id: context.payload.workflow_run.id,
+          });
+          let run_number = allArtifacts.data.artifacts.filter((artifact) => {
+            return artifact.name == "run_number"
+          })[0];
+          let download = await github.rest.actions.downloadArtifact({
+             owner: context.repo.owner,
+             repo: context.repo.repo,
+             artifact_id: run_number.id,
+             archive_format: 'zip',
+          });
+          let fs = require('fs');
+          fs.writeFileSync(`${process.env.GITHUB_WORKSPACE}/run_number.zip`, Buffer.from(download.data));
 
     - name: Unzip run_number
       run: unzip run_number.zip -d .
+
+    - name: 'Download frontend artifact'
+  uses: actions/github-script@v6
+  with:
+    script: |
+      let allArtifacts = await github.rest.actions.listWorkflowRunArtifacts({
+         owner: context.repo.owner,
+         repo: context.repo.repo,
+         run_id: context.payload.workflow_run.id,
+      });
+
+      let fs = require('fs');
+
+      fs.readFile('run_number.txt', 'utf8', (err, data) => {
+          if (err) { 
+              console.error('Error reading file:', err);
+              return;
+          }
+          let version = data.trim();
+          let frontend_build = allArtifacts.data.artifacts.find((artifact) => {
+            return artifact.name == `frontend-build-${version}`;
+          });
+
+          console.log('Version:', version);
+          console.log('Frontend build:', frontend_build);
+
+          if (frontend_build) {
+              github.rest.actions.downloadArtifact({
+                 owner: context.repo.owner,
+                 repo: context.repo.repo,
+                 artifact_id: frontend_build.id,
+                 archive_format: 'zip',
+              }).then(download => {
+                  fs.writeFileSync(`${process.env.GITHUB_WORKSPACE}/frontend-build-${version}.zip`, Buffer.from(download.data));
+              }).catch(error => {
+                  console.error('Error downloading artifact:', error);
+              });
+          } else {
+              console.error('Frontend build not found for version:', version);
+          }
+      });
+      
+    - name: Unzip Build Folder Artifact
+      run: unzip frontend-build-${{ steps.frontend_version.outputs.version }}.zip -d .
     
   deploy-backend:
     needs: get_artifacts
@@ -70,6 +117,6 @@ jobs:
           azure_static_web_apps_api_token: ${{ secrets.AZURE_STATIC_WEB_APPS_API_TOKEN_YELLOW_FOREST_0E6CD570F }}
           repo_token: ${{ secrets.GITHUB_TOKEN }}
           action: "upload"
-          app_location: "frontend-build"
+          app_location: "frontend-build-${{ steps.frontend_version.outputs.version }}"
           output_location: "frontend/build"
           skip_app_build: true
