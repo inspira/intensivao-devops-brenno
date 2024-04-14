@@ -123,7 +123,7 @@ jobs:
         slot-name: 'production'
         publish-profile: ${{ secrets.AzureAppService_PublishProfile_008d67032fca4db98179f44c50b0bead }}
         images: 'DOCKER|${{ secrets.ACR_SERVER }}/${{ secrets.IMAGE_NAME }}:${{ steps.backend_version.outputs.version }}'
-        linux-fx-version: 'DOCKER|latest'
+        LinuxFxVersion: 'DOCKER|${{ secrets.ACR_SERVER }}/${{ secrets.IMAGE_NAME }}'
   
   deploy-frontend:
     needs: get_artifacts
