@@ -49,12 +49,10 @@ jobs:
       run: echo "${{ github.run_number }}" > run_number.txt
 
     - name: Archive run number
-      if: always()
-      uses: actions/upload-artifact@v2
+      uses: actions/upload-artifact@v4
       with:
         name: run_number
         path: run_number.txt
-        if-no-files-found: error
 
   build-frontend:
     if: github.event_name == 'push' || (github.event_name == 'pull_request' && github.event.action != 'closed')
@@ -82,12 +80,10 @@ jobs:
         run: echo "::set-output name=version::1.0.${{ github.run_number }}"
 
       - name: Build frontend
-        run: |
-          version=$(echo "${{ steps.frontend_version.outputs.version }}")
-          yarn --cwd frontend build:deploy --version=${version}
+        run: yarn --cwd frontend build:deploy
 
       - name: Upload artifact to GitHub Packages
         uses: actions/upload-artifact@v4
         with:
-          name: frontend-build
+          name: frontend-build-${{ steps.frontend_version.outputs.version }}
           path: frontend/build
