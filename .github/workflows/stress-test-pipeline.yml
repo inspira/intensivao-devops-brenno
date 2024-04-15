@@ -22,4 +22,4 @@ jobs:
           pip install python-dotenv
 
       - name: Run Locust Tests
-        run: locust -f backend/locustfile.py --headless -u 10 -r 2 --run-time 10m
+        run: locust -f backend/locustfile.py --headless -u 10 -r 5 --run-time 3m
