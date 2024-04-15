@@ -11,7 +11,6 @@ base_url = os.environ.get("BASE_URL")
 
 class QuickstartUser(HttpUser):
     wait_time = between(1, 5)
-    host = base_url
 
     @task
     def health(self):
@@ -20,3 +19,7 @@ class QuickstartUser(HttpUser):
     @task(3)
     def sum(self):
         self.client.post("/api/sum", json={"num1": 10, "num2": 50})
+
+    @property
+    def host(self):
+        return os.environ.get("BASE_URL", "http://127.0.0.1:8000")
