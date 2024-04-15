@@ -1,0 +1,22 @@
+name: Stress Test
+
+on:
+  workflow_run:
+    workflows: ["Deploy Backend and Frontend"]
+    types:
+      - completed
+
+jobs:
+  locust_tests:
+    name: Run Locust Tests
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v2
+
+      - name: Install Dependencies
+        run: pip install locust
+
+      - name: Run Locust Tests
+        run: locust -f backend/locustfile.py --headless -u 100 -r 10 --run-time 1m
