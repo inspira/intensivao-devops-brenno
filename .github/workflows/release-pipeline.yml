@@ -108,7 +108,7 @@ jobs:
     - name: Download run_number.txt artifact
       uses: actions/download-artifact@v4
       with:
-        name: wrong
+        name: rum_number
         path: .
       
     - name: Generate Backend Semantic Version
@@ -132,7 +132,7 @@ jobs:
       - name: Download frontend-build artifact
         uses: actions/download-artifact@v4
         with:
-          name: wrong
+          name: frontend-build
           path: frontend-build
 
       - name: Build And Deploy
