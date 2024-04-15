@@ -108,7 +108,7 @@ jobs:
     - name: Download run_number.txt artifact
       uses: actions/download-artifact@v4
       with:
-        name: run_number
+        name: wrong
         path: .
       
     - name: Generate Backend Semantic Version
@@ -132,7 +132,7 @@ jobs:
       - name: Download frontend-build artifact
         uses: actions/download-artifact@v4
         with:
-          name: frontend-build
+          name: wrong
           path: frontend-build
 
       - name: Build And Deploy
@@ -178,6 +178,18 @@ jobs:
           cat run_number.txt
           awk '{$1=$1-1}1' run_number.txt > tmp_run_number && mv tmp_run_number run_number.txt
 
+      - name: Generate Semantic Version
+        id: version
+        run: echo "::set-output name=version::1.0.$(cat run_number.txt)"
+
+      - name: Get URL of last-but-one successful build artifacts
+        id: get_artifact_url
+        run: |
+          repo_full_name=$(echo "${{ github.repository }}" | tr '[:upper:]' '[:lower:]')
+          branch=$(echo "${{ github.ref }}" | awk -F '/' '{print $3}')
+          last_but_one_run_id=$(curl -s -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" "https://api.github.com/repos/$repo_full_name/actions/workflows/build-pipeline.yml/runs?event=push&status=success&branch=$branch" | jq '.workflow_runs[1].id')
+          echo "::set-output name=last_but_one_run_id::$last_but_one_run_id"
+
       - name: 'Download frontend artifact'
         uses: actions/github-script@v6
         with:
@@ -185,7 +197,7 @@ jobs:
             let allArtifacts = await github.rest.actions.listWorkflowRunArtifacts({
               owner: context.repo.owner,
               repo: context.repo.repo,
-              run_id: context.payload.workflow_run.id,
+              run_id: ${{ steps.get_artifact_url.outputs.last_but_one_run_id }},
             });
       
             let fs = require('fs');
@@ -211,7 +223,7 @@ jobs:
                       artifact_id: frontend_build.id,
                       archive_format: 'zip',
                     }).then(download => {
-                        fs.writeFileSync(`${process.env.GITHUB_WORKSPACE}/frontend-build.zip`, Buffer.from(download.data));
+                        fs.writeFileSync(`${process.env.GITHUB_WORKSPACE}/frontend-build-${version}.zip`, Buffer.from(download.data));
                     }).catch(error => {
                         console.error('Error downloading artifact:', error);
                     });
@@ -220,12 +232,8 @@ jobs:
                 }
             });
 
-      - name: Generate Semantic Version
-        id: version
-        run: echo "::set-output name=version::1.0.$(cat run_number.txt)"
-        
       - name: Unzip Build Folder Artifact
-        run: unzip frontend-build.zip -d ./frontend-build
+        run: unzip frontend-build-${{ steps.version.outputs.version }}.zip -d ./frontend-build
 
       - name: Rollback Static Web App
         id: builddeploy
@@ -247,32 +255,31 @@ jobs:
           publish-profile: ${{ secrets.AzureAppService_PublishProfile_008d67032fca4db98179f44c50b0bead }}
           images: 'inspiradevops.azurecr.io/${{ secrets.AzureAppService_ContainerUsername_792aa0849f8d49e0a3ae051198c4fdc4 }}/brenno-app:${{ steps.version.outputs.version }}'
   
-
-  notify:
-    needs: [deploy-backend, deploy-frontend, rollback]
-    runs-on: ubuntu-latest
-    if: always()
-    steps:
-      - name: Send Slack notification on failure
-        if: ${{ failure() }}
-        uses: rtCamp/action-slack-notify@v2
-        env:
-          SLACK_CHANNEL: general
-          SLACK_COLOR: 'red'
-          SLACK_ICON: https://assets.stickpng.com/images/580b57fbd9996e24bc43bdf6.png
-          SLACK_MESSAGE: 'Your application deploy have failed.'
-          SLACK_TITLE: DEPLOY FAILED
-          SLACK_USERNAME: Pipo
-          SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
-
-      - name: Send Slack notification on success
-        if: ${{ success() }}
-        uses: rtCamp/action-slack-notify@v2
-        env:
-          SLACK_CHANNEL: general
-          SLACK_COLOR: 'green'
-          SLACK_ICON: https://assets.stickpng.com/images/580b57fbd9996e24bc43bdf6.png
-          SLACK_MESSAGE: 'Your application deploy have completed successfully.'
-          SLACK_TITLE: DEPLOY SUCCEEDED
-          SLACK_USERNAME: Pipo
-          SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
+#  notify:
+#    needs: [deploy-backend, deploy-frontend, rollback]
+#    runs-on: ubuntu-latest
+#    if: always()
+#    steps:
+#      - name: Send Slack notification on failure
+#        if: ${{ failure() }}
+#        uses: rtCamp/action-slack-notify@v2
+#        env:
+#          SLACK_CHANNEL: general
+#          SLACK_COLOR: 'red'
+#          SLACK_ICON: https://assets.stickpng.com/images/580b57fbd9996e24bc43bdf6.png
+#          SLACK_MESSAGE: 'Your application deploy have failed.'
+#          SLACK_TITLE: DEPLOY FAILED
+#          SLACK_USERNAME: Pipo
+#          SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
+#
+#      - name: Send Slack notification on success
+#        if: ${{ success() }}
+#        uses: rtCamp/action-slack-notify@v2
+#        env:
+#          SLACK_CHANNEL: general
+#          SLACK_COLOR: 'green'
+#          SLACK_ICON: https://assets.stickpng.com/images/580b57fbd9996e24bc43bdf6.png
+#          SLACK_MESSAGE: 'Your application deploy have completed successfully.'
+#          SLACK_TITLE: DEPLOY SUCCEEDED
+#          SLACK_USERNAME: Pipo
+#          SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
