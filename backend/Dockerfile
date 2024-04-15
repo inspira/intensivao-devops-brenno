@@ -25,16 +25,15 @@ RUN apt-get update && \
         /usr/share/doc \
         /usr/share/doc-base
 
-# Set env
-COPY backend/.env.${ENVIRONMENT} .env
+# Copy application
+COPY ./backend ./
 
 # Install application dependencies
-COPY backend/Pipfile ./
 RUN pipenv install
 RUN npm install -g newman
 
-# Copy application
-COPY ./ /app/backend
+# Set env
+COPY backend/.env.${ENVIRONMENT} .env
 
 # Open port 8000 for SSH access
 EXPOSE 8000
