@@ -17,8 +17,9 @@ jobs:
 
       - name: Install Dependencies
         run: |
+          pip install --upgrade pip
           pip install locust
-          pip install dotenv
+          pip install python-dotenv
 
       - name: Run Locust Tests
         run: locust -f backend/locustfile.py --headless -u 100 -r 10 --run-time 1m
