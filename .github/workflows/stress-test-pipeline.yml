@@ -16,7 +16,9 @@ jobs:
         uses: actions/checkout@v2
 
       - name: Install Dependencies
-        run: pip install locust
+        run: |
+          pip install locust
+          pip install dotenv
 
       - name: Run Locust Tests
         run: locust -f backend/locustfile.py --headless -u 100 -r 10 --run-time 1m

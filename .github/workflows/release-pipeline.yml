@@ -108,7 +108,7 @@ jobs:
     - name: Download run_number.txt artifact
       uses: actions/download-artifact@v4
       with:
-        name: rum_number
+        name: run_number
         path: .
       
     - name: Generate Backend Semantic Version
