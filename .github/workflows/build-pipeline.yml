@@ -46,7 +46,8 @@ jobs:
       uses: docker/build-push-action@v2
       with:
         push: true
-        tags: ${{ secrets.ACR_SERVER }}/brenno-app:${{ steps.backend_version.outputs.version }}
+        cache-from: ${{ secrets.ACR_SERVER }}/brenno-app:latest
+        tags: ${{ secrets.ACR_SERVER }}/brenno-app:${{ steps.backend_version.outputs.version }},${{ secrets.ACR_SERVER }}/brenno-app:latest
         file: ./backend/Dockerfile
     
     - name: Save run number to file
