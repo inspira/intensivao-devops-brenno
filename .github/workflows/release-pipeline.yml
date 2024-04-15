@@ -145,3 +145,134 @@ jobs:
           app_location: "frontend-build"
           output_location: "frontend/build"
           skip_app_build: true
+
+  rollback:
+    runs-on: ubuntu-latest
+    needs: [deploy-backend, deploy-frontend]
+    if: ${{ always() && (needs.deploy-backend.result == 'failure' || needs.deploy-frontend.result == 'failure') }}
+    steps:
+      - name: 'Download version artifact'
+        uses: actions/github-script@v6
+        with:
+          script: |
+            let allArtifacts = await github.rest.actions.listWorkflowRunArtifacts({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              run_id: context.payload.workflow_run.id,
+            });
+            let run_number = allArtifacts.data.artifacts.filter((artifact) => {
+              return artifact.name == "run_number"
+            })[0];
+            let download = await github.rest.actions.downloadArtifact({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              artifact_id: run_number.id,
+              archive_format: 'zip',
+            });
+            let fs = require('fs');
+            fs.writeFileSync(`${process.env.GITHUB_WORKSPACE}/run_number.zip`, Buffer.from(download.data));
+
+      - name: Unzip run_number
+        run: |
+          unzip run_number.zip -d .
+          cat run_number.txt
+          awk '{$1=$1-1}1' run_number.txt > tmp_run_number && mv tmp_run_number run_number.txt
+
+      - name: 'Download frontend artifact'
+        uses: actions/github-script@v6
+        with:
+          script: |
+            let allArtifacts = await github.rest.actions.listWorkflowRunArtifacts({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              run_id: context.payload.workflow_run.id,
+            });
+      
+            let fs = require('fs');
+      
+            fs.readFile('run_number.txt', 'utf8', (err, data) => {
+                if (err) { 
+                    console.error('Error reading file:', err);
+                    return;
+                }
+                let run_number = data.trim();
+                let version = `1.0.${run_number}`
+                let frontend_build = allArtifacts.data.artifacts.find((artifact) => {
+                  return artifact.name == `frontend-build-${version}`;
+                });
+      
+                console.log('Version:', version);
+                console.log('Frontend build:', frontend_build);
+      
+                if (frontend_build) {
+                    github.rest.actions.downloadArtifact({
+                      owner: context.repo.owner,
+                      repo: context.repo.repo,
+                      artifact_id: frontend_build.id,
+                      archive_format: 'zip',
+                    }).then(download => {
+                        fs.writeFileSync(`${process.env.GITHUB_WORKSPACE}/frontend-build.zip`, Buffer.from(download.data));
+                    }).catch(error => {
+                        console.error('Error downloading artifact:', error);
+                    });
+                } else {
+                    console.error('Frontend build not found for version:', version);
+                }
+            });
+
+      - name: Generate Semantic Version
+        id: version
+        run: echo "::set-output name=version::1.0.$(cat run_number.txt)"
+        
+      - name: Unzip Build Folder Artifact
+        run: unzip frontend-build.zip -d ./frontend-build
+
+      - name: Rollback Static Web App
+        id: builddeploy
+        uses: Azure/static-web-apps-deploy@v1
+        with:
+          azure_static_web_apps_api_token: ${{ secrets.AZURE_STATIC_WEB_APPS_API_TOKEN_YELLOW_FOREST_0E6CD570F }}
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          action: "upload"
+          app_location: "frontend-build"
+          output_location: "frontend/build"
+          skip_app_build: true
+
+      - name: Rollback Azure Web App
+        id: deploy-to-webapp
+        uses: azure/webapps-deploy@v2
+        with:
+          app-name: 'sum-calculator-web-app'
+          slot-name: 'production'
+          publish-profile: ${{ secrets.AzureAppService_PublishProfile_008d67032fca4db98179f44c50b0bead }}
+          images: 'inspiradevops.azurecr.io/${{ secrets.AzureAppService_ContainerUsername_792aa0849f8d49e0a3ae051198c4fdc4 }}/brenno-app:${{ steps.version.outputs.version }}'
+  
+
+  notify:
+    needs: [deploy-backend, deploy-frontend, rollback]
+    runs-on: ubuntu-latest
+    if: always()
+    steps:
+      - name: Send Slack notification on failure
+        if: ${{ failure() }}
+        uses: rtCamp/action-slack-notify@v2
+        env:
+          SLACK_CHANNEL: general
+          SLACK_COLOR: 'red'
+          SLACK_ICON: https://assets.stickpng.com/images/580b57fbd9996e24bc43bdf6.png
+          SLACK_MESSAGE: 'Your application deploy have failed.'
+          SLACK_TITLE: DEPLOY FAILED
+          SLACK_USERNAME: Pipo
+          SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
+
+      - name: Send Slack notification on success
+        if: ${{ success() }}
+        uses: rtCamp/action-slack-notify@v2
+        env:
+          SLACK_CHANNEL: general
+          SLACK_COLOR: 'green'
+          SLACK_ICON: https://assets.stickpng.com/images/580b57fbd9996e24bc43bdf6.png
+          SLACK_MESSAGE: 'Your application deploy have completed successfully.'
+          SLACK_TITLE: DEPLOY SUCCEEDED
+          SLACK_USERNAME: Pipo
+          SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
