@@ -121,8 +121,8 @@ jobs:
       with:
         app-name: 'sum-calculator-web-app'
         slot-name: 'production'
-        publish-profile: ${{ secrets.AzureAppService_PublishProfile_008d67032fca4db98179f44c50b0bead }}
-        images: 'inspiradevops.azurecr.io/brenno-app:${{ steps.backend_version.outputs.version }}'
+        publish-profile: ${{ secrets.AzureAppService_PublishProfile_296015baad9746858deb62e2d6f4d14c }}
+        images: 'inspiradevops.azurecr.io/${{ secrets.IMAGE_NAME}}:${{ steps.backend_version.outputs.version }}'
   
   deploy-frontend:
     needs: get_artifacts
@@ -252,8 +252,8 @@ jobs:
         with:
           app-name: 'sum-calculator-web-app'
           slot-name: 'production'
-          publish-profile: ${{ secrets.AzureAppService_PublishProfile_008d67032fca4db98179f44c50b0bead }}
-          images: 'inspiradevops.azurecr.io/brenno-app:${{ steps.version.outputs.version }}'
+          publish-profile: ${{ secrets.AzureAppService_PublishProfile_296015baad9746858deb62e2d6f4d14c }}
+          images: 'inspiradevops.azurecr.io/${{ secrets.IMAGE_NAME }}:${{ steps.version.outputs.version }}'
   
 #  notify:
 #    needs: [deploy-backend, deploy-frontend, rollback]
