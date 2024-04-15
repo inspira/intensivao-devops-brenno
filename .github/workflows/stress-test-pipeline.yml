@@ -22,4 +22,4 @@ jobs:
           pip install python-dotenv
 
       - name: Run Locust Tests
-        run: locust -f backend/locustfile.py --headless -u 10 -r 5 --run-time 3m
+        run: locust -f backend/locustfile.py --headless -u 10 -r 5 --run-time 3m --host https://sum-calculator-web-app.azurewebsites.net
